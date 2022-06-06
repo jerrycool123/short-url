@@ -1,11 +1,12 @@
 import type { NextPage } from 'next';
-import { useState } from 'react';
+import { useState, useRef, FormEvent } from 'react';
 import axios from 'axios';
 
 import { Public } from '../libs/public-env';
 import { IGenerateUrlBody } from '../libs/type';
 
 const Home: NextPage = () => {
+  const formRef = useRef(null);
   const [url, setUrl] = useState<string>('');
   const [generatedUrl, setGeneratedUrl] = useState<string>('');
   const [message, setMessage] = useState<string>('');
@@ -19,7 +20,8 @@ const Home: NextPage = () => {
     }
   };
 
-  const handleRegisterURL = async () => {
+  const handleRegisterURL = async (e: FormEvent) => {
+    e.preventDefault();
     if (url.length) {
       setMessage('');
       setGeneratedUrl('');
@@ -41,8 +43,16 @@ const Home: NextPage = () => {
   
   return (
     <>
-      <input type="url" onChange={(e) => setUrl(e.target.value)} />
-      <button disabled={!url.length} onClick={handleRegisterURL}>submit</button>
+      <form ref={formRef} onSubmit={(e) => handleRegisterURL(e)}>
+        <input 
+          type="url" 
+          style={{ width: '20rem' }} 
+          onChange={(e) => setUrl(e.target.value)} 
+          placeholder="Please enter URL you want to shorten."
+          required
+        />
+        <input type="submit" value="submit"/>
+      </form>
       <div>{message}</div>
       {generatedUrl ? <a href={generatedUrl}>{generatedUrl}</a> : null}
     </>
