@@ -11,7 +11,7 @@ const Home: NextPage = () => {
   const [generatedUrl, setGeneratedUrl] = useState<string>('');
   const [message, setMessage] = useState<string>('');
 
-  const staticGeneration = async (target: string) => {
+  const asyncStaticGeneration = async (target: string) => {
     try {
       await axios.get(target);
     } catch (error) {
@@ -25,19 +25,32 @@ const Home: NextPage = () => {
     if (url.length) {
       setMessage('');
       setGeneratedUrl('');
-      const { data: { code } } = await axios.post<IGenerateUrlBody>(
-        '/api/generate',
-        { url },
-      );
+
+      let code: string | undefined = undefined;
+      try {
+        const { data: { code: newCode } } = await axios.post<IGenerateUrlBody>(
+          '/api/generate',
+          { url },
+        );
+        code = newCode;
+      } catch (error) {
+        if (axios.isAxiosError(error) && error.response) {
+          setMessage(error.response.data as string);
+        } else if (error instanceof Error) {
+          setMessage(error.message);
+        }
+        console.error(error);
+        return;
+      }
+
       if (!code) {
         setMessage('internal server error');
         return;
       }
       const newUrl = Public.NEXT_PUBLIC_APP_URL + '/' + code;
       setMessage('success!');
-      staticGeneration(newUrl);
+      asyncStaticGeneration(newUrl);
       setGeneratedUrl(newUrl);
-      console.log(newUrl);
     }
   };
   
